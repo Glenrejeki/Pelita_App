@@ -1,6 +1,16 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+
+    // ✅ Kotlin 2.0 Compose plugin (WAJIB untuk Kotlin 2.x)
+    alias(libs.plugins.kotlin.compose)
+
+    // ✅ WAJIB kalau pakai @Serializable
+    alias(libs.plugins.kotlin.serialization)
+
+    // ✅ Hilt
+    alias(libs.plugins.hilt.android)
+    alias(libs.plugins.kotlin.kapt)
 }
 
 android {
@@ -15,9 +25,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary = true
-        }
+        vectorDrawables { useSupportLibrary = true }
+
+        // OPTIONAL: kalau mau simpan supabase url/key di BuildConfig
+        // buildConfigField("String", "SUPABASE_URL", "\"https://xxxx.supabase.co\"")
+        // buildConfigField("String", "SUPABASE_ANON_KEY", "\"YOUR_ANON_KEY\"")
     }
 
     buildTypes {
@@ -30,24 +42,20 @@ android {
         }
     }
 
-    // ✅ WAJIB untuk Compose
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
-    // ✅ WAJIB untuk Compose (compiler extension)
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.15"
-    }
-
-    // ✅ Saran kuat: Java 17
+    // ✅ Java 17
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+
+        // ✅ biar java.time.Instant aman di minSdk 24/25
+        isCoreLibraryDesugaringEnabled = true
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+    kotlinOptions { jvmTarget = "17" }
 
     packaging {
         resources {
@@ -57,28 +65,63 @@ android {
 }
 
 dependencies {
-    // ✅ Compose BOM (biar versi compose konsisten)
-    implementation(platform("androidx.compose:compose-bom:2024.12.01"))
-    androidTestImplementation(platform("androidx.compose:compose-bom:2024.12.01"))
+    // =========================
+    // Compose (pakai BOM)
+    // =========================
+    implementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(platform(libs.androidx.compose.bom))
 
-    // ✅ Compose core
-    implementation("androidx.activity:activity-compose:1.9.3")
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("androidx.compose.material3:material3")
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
 
-    // ✅ Navigation Compose (karena kamu pakai NavHost)
-    implementation("androidx.navigation:navigation-compose:2.8.5")
+    // Navigation Compose
+    implementation(libs.androidx.navigation.compose)
 
-    // ✅ Icons extended (Icons.Default.*)
-    implementation("androidx.compose.material:material-icons-extended")
+    // Icons extended (Icons.Default.*)
+    implementation(libs.androidx.compose.material.icons.extended)
 
-    // ✅ Debug tooling
-    debugImplementation("androidx.compose.ui:ui-tooling")
-    debugImplementation("androidx.compose.ui:ui-test-manifest")
+    // Debug tooling
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-    // ✅ Unit/UI test default
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.2.1")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    // =========================
+    // DataStore (tema)
+    // =========================
+    implementation(libs.androidx.datastore.preferences)
+
+    // =========================
+    // Kotlin Serialization
+    // =========================
+    implementation(libs.kotlinx.serialization.json)
+
+    // =========================
+    // Supabase-kt (jan-tennert)
+    // =========================
+    implementation(libs.supabase.auth)
+    implementation(libs.supabase.postgrest)
+    implementation(libs.supabase.storage) // kalau kamu install(Storage) di client
+
+    // Supabase-kt butuh ktor engine
+    implementation(libs.ktor.okhttp)
+
+    // =========================
+    // Desugaring (java.time)
+    // =========================
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+
+    // =========================
+    // Hilt
+    // =========================
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+
+    // =========================
+    // Testing
+    // =========================
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }
